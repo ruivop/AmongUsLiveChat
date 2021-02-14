@@ -1,3 +1,5 @@
+const talkingDistance = 50;
+
 var onlineUsers = [];
 
 function getOnlineUserByUsername(username) {
@@ -46,6 +48,7 @@ class OnlineUser {
         this.audioVolume = 0.0;
         this.audioMetter = null;
         this.position = [-1, -1];
+        this.volume = 0;
     }
 
     createPeerConnection() {
@@ -70,5 +73,27 @@ class OnlineUser {
 
     setPosition(newPosition) {
         this.position = newPosition;
+
+        var a = globalLocationPoint[0] - this.position[0];
+        var b = globalLocationPoint[1] - this.position[1];
+
+        var distance = Math.sqrt(a * a + b * b);
+        let volumeToSet = 0;
+        if (distance > talkingDistance) {
+            volumeToSet = 0;
+        } else {
+            volumeToSet = 1;
+        }
+        if (volumeToSet == this.volume) {
+            return;
+        }
+        if(!this.peerConnection)
+            this.peerConnection = getPeerConnectionOfUsername(this.username);
+
+        console.log("volume set to " + volumeToSet);
+        console.log(this.peerConnection);
+        console.log(this.username);
+        this.volume = volumeToSet;
+        this.peerConnection.setAudioLevel(volumeToSet);
     }
 }

@@ -4,6 +4,8 @@ var localPeerConnections = [];
 function getPeerConnectionOfUsername(usernameToSerach) {
     if (!usernameToSerach)
         throw new Exception("username must have a value");
+    if (usernameToSerach == username)
+        return null;
 
     let localEmptyPeer;
     for (let index = 0; index < localPeerConnections.length; index++) {
@@ -56,7 +58,8 @@ function startMyMedia() {
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
-            $(".GreenSendAudioChat").append('<p>Local:</p><audio id="localAudio" autoplay playsinline controls muted></audio>');
+            let audioElement = $('<p>Local:</p><audio id="localAudio" autoplay playsinline controls muted></audio>');
+            $(".GreenSendAudioChat").append(audioElement);
             const videoElement = $('#localAudio')[0];
             videoElement.srcObject = stream;
             localStream = stream;
@@ -82,6 +85,7 @@ class LocalPeerConnection {
         this.remoteUsername = remoteUsername;
         this.state = "new";
         this.dataChannel;
+        this.audioElement = null;
     }
 
     async CreateWebrtcOffer() {
@@ -172,12 +176,19 @@ class LocalPeerConnection {
     }
 
     gotRemoteStream(e) {
-        $(".GreenSendAudioChat").append('<div id="testAudioElement' + this.remoteUsername + '"><p>Remote ' + this.remoteUsername + ':</p><audio class="bordered" id="remoteAudio' + this.remoteUsername + '" autoplay controls playsinline muted></audio></div>');
-        const remoteAudio = $("#remoteAudio" + this.remoteUsername)[0];
-        if (remoteAudio.srcObject !== e.streams[0]) {
-            remoteAudio.srcObject = e.streams[0];
+        this.audioElement = $('<div id="testAudioElement' + this.remoteUsername + '"><p>Remote ' + this.remoteUsername + ':</p><audio class="bordered" id="remoteAudio' + this.remoteUsername + '" autoplay controls playsinline></audio></div>');
+        $(".GreenSendAudioChat").append(this.audioElement);
+        this.audioElement = $("#remoteAudio" + this.remoteUsername)[0];
+        if (this.audioElement.srcObject !== e.streams[0]) {
+            this.audioElement.srcObject = e.streams[0];
             startMesuringAudio(this.remoteUsername, e.streams[0]);
             console.log('Received remote stream');
+        }
+    }
+
+    setAudioLevel(newVolume) {
+        if (this.audioElement) {
+            this.audioElement.volume = newVolume;
         }
     }
 

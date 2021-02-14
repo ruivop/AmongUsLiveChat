@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Among Us Live Chat</title>
+    <link rel="stylesheet" href="packages/bootstrap-4.3.1-dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url("assets/backgroung.png");
+            background-color: #06090e;
+            height: 100vh;
+            display: grid;
+            align-items: center;
+        }
+
+        #chatForm {
+            background-color: #182438ec;
+            color: white;
+            padding: 30px;
+            width: 75%;
+            max-width: 700px;
+            margin: auto;
+            border: 3px solid #283c5e;
+            border-radius: 10px;
+        }
+
+        .btn {
+            width: 70%;
+            margin-left: 15%;
+            margin-right: 15%;
+        }
+
+        #ColorInput {
+            width: 100%;
+            height: 200px;
+            white-space: normal;
+            overflow-x: auto;
+            overflow-y: auto;
+
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
+
+        @media only screen and (max-width: 630px) {
+            #chatForm {
+                width: 95%;
+            }
+        }
+
+        .colorVal {
+            width: 90px;
+            height: 90px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 4px solid transparent;
+
+            padding: 25px 0;
+
+            font-size: 25px;
+            text-align: center;
+            color: black;
+            -webkit-text-fill-color: white;
+            -webkit-text-stroke-width: 1px;
+            -webkit-text-stroke-color: black;
+
+            cursor: default;
+        }
+
+        .colorVal:hover {
+            border: 4px solid white;
+        }
+
+        .selectedOption {
+            border: 4px solid white;
+            background-image: url("assets/close.png");
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <form id="chatForm" action="liveamongchat.html">
+        <h1>Among Us Live Chat</h1>
+        <div class="form-group">
+            <label for="usernameInput">Username:</label>
+            <input required name="username" type="text" class="form-control" id="usernameInput"
+                aria-describedby="emailHelp" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <label for="ColorInput">Color:</label>
+            <div id="ColorInput">
+                <div id="initialColor" class="colorVal" style="background-color: #C51111;" onclick="selectedColor('red', this)"></div>
+                <div class="colorVal" style="background-color: #132ED1;" onclick="selectedColor('blue', this)"></div>
+                <div class="colorVal" style="background-color: #117F2D;" onclick="selectedColor('green', this)"></div>
+                <div class="colorVal" style="background-color: #ED54BA;" onclick="selectedColor('pink', this)"></div>
+                <div class="colorVal" style="background-color: #EF7D0E;" onclick="selectedColor('orange', this)"></div>
+                <div class="colorVal" style="background-color: #F6F658;" onclick="selectedColor('yellow', this)"></div>
+                <div class="colorVal" style="background-color: #3F474E;" onclick="selectedColor('black', this)"></div>
+                <div class="colorVal" style="background-color: #D6E0F0;" onclick="selectedColor('white', this)"></div>
+                <div class="colorVal" style="background-color: #6B31BC;" onclick="selectedColor('purple', this)"></div>
+                <div class="colorVal" style="background-color: #71491E;" onclick="selectedColor('brown', this)"></div>
+                <div class="colorVal" style="background-color: #38FEDB;" onclick="selectedColor('cyan', this)"></div>
+                <div class="colorVal" style="background-color: #50EF39;" onclick="selectedColor('lime', this)"></div>
+            </div>
+            <input id="colorInputValue" name="color" type="hidden">
+        </div>
+        <button class="btn btn-primary">Enter</button>
+    </form>
+
+    <script>
+        var colorSelected = null;
+
+        var currentSelectedElement = null;
+
+        function selectedColor(color, element) {
+            if(currentSelectedElement) {
+                currentSelectedElement.classList.remove("selectedOption");
+            }
+
+            currentSelectedElement = element;
+
+            colorSelected = color;
+            currentSelectedElement.classList.add("selectedOption");
+
+            document.getElementById("colorInputValue").value = color;
+        }
+
+        selectedColor("red", document.getElementById("initialColor"));
+
+    </script>
+</body>
+
+</html>

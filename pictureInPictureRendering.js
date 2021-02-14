@@ -38,7 +38,7 @@ function drawTalkingPlayers() {
         var ctx = canvas.getContext('2d');
 
         //background
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "#06090e";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         //bubbles
@@ -83,7 +83,7 @@ function drawTalkingPlayers() {
         }
 
         //status
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "white";
         ctx.fillText("Preparado", 300, 280);
     }
 }
