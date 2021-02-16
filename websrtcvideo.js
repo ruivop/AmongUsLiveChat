@@ -66,6 +66,8 @@ function startMyMedia() {
 
             startMesuringAudio(username, stream);
 
+            didShareTheMic();
+
             OpenWebSocket();
         })
         .catch(error => {

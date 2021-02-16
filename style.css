@@ -1,0 +1,215 @@
+/**** Document ****/
+html {
+    background-color: black;
+    background-image: url("assets/backgroung.png");
+}
+
+body {
+    margin: 0px;
+    padding: 0px;
+    font-family: 'Roboto', sans-serif;
+    background-image: url("assets/backgroung.png");
+}
+
+p {
+    margin-bottom: 0rem;
+}
+
+.bg-dark {
+    background-color: #283c5e!important;
+}
+
+
+/**** Scol Bar ****/
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px grey;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: powderblue;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(120, 155, 160);
+}
+
+/**** Layout ****/
+.GreenSend {
+    max-width: 1500px;
+    margin: auto;
+    color: white;
+    
+    display: flex;
+    flex-wrap: wrap;
+    justify-content:center;
+}
+
+.mainPanel {
+    background-color: #182438ec;
+    border: 3px solid #283c5e;
+    border-radius: 10px;
+    margin: 10px;
+    flex-grow: 1;
+}
+
+.mainPanelMinSized {
+    min-height: 350px;
+}
+
+/****  ****/
+.premissionsPanel {
+    padding: 10px;
+}
+
+.premissionLine {
+    margin: 5px;
+}
+
+/**** Online Users ****/
+#OnlineUsers {
+    min-width: 300px;
+}
+
+.MyUser {
+    border-bottom: 3px solid #283c5e;
+}
+
+.MyUserDiv {
+    height: 50px;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.UserDot {
+    height: 30px;
+    width: 30px;
+    background-color: GreenYellow;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: black;
+}
+
+.UserDiv {
+    height: 50px;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#MyUserName {
+    display: inline-block;
+    margin: 0px;
+    padding-left: 5px;
+}
+
+.GreenSendUsers {
+}
+
+/**** GreenSendAudioChat ****/
+.GreenSendAudioChat {
+    padding: 10px;
+}
+
+/**** DebugDiv ****/
+#inputoutput {
+    padding: 10px;
+}
+
+.testCanvas {
+border: 1px solid white;
+}
+
+/**** Chat ****/
+.GreenSendChat {
+    min-width: 300px;
+    max-width: 500px;
+
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto 50px;
+
+    overflow-y: auto;
+}
+
+#GreenSendChatMessages {
+    overflow-y: scroll;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+.GreenSendChatControls {
+    display: grid;
+    grid-template-columns: auto 70px;
+    grid-template-rows: auto;
+}
+
+#textareaTosend {
+    background-color: transparent;
+    color: white;
+    padding-left: 5px;
+    border: 3px none #283c5e;
+    border-top: 3px solid #283c5e;
+}
+
+.UserName {
+    display: inline-block;
+    margin: 0px;
+    padding-left: 5px;
+}
+
+.OtherUserChatMessageLine {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.OtherUserChatMessage {
+    background-color: gainsboro;
+}
+
+.MyUserChatMessageLine {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.MyUserChatMessage {
+    background-color: powderblue;
+}
+
+.AllUserChatMessage {
+    max-width: 80%;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    color: black;
+}
+
+
+/**** PictureInPicuture ****/
+#audioCanvas {
+    max-width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pictureInPictureButton {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+}

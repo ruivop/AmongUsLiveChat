@@ -84,7 +84,7 @@ function drawTalkingPlayers() {
 
         //status
         ctx.fillStyle = "white";
-        ctx.fillText("Preparado", 300, 280);
+        ctx.fillText("Ready", 300, 280);
     }
 }
 

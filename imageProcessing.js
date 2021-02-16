@@ -6,6 +6,7 @@ var isDebuggingImageProcessing = false;
 var isRunning = true;
 
 async function startScreenCapture() {
+
     const mapImage = document.querySelector('#imageSrc');
     const deathSreenImage = document.querySelector('#imageDeathScreen');
     mapImage.height *= smallFactor;
@@ -23,6 +24,7 @@ async function startScreenCapture() {
     videoElement.height = videoNormalHeight;
     videoElement.srcObject = stream;
     setTimeout(startScreenProcessing, 1000);
+    didShareTheScreen();
 }
 
 
@@ -54,6 +56,8 @@ function startScreenProcessing() {
     let greyScaleToSearch = greyScaleMain.clone();
     var previousCorpRect = null;
     let locationPoint;
+    let wasLastLocationQuestionable = true;
+    const questionableLocationDistance = 20;
     const confidenceThresholdPercent = 0.2;
     function processImage() {
         let begin = Date.now();
@@ -92,6 +96,28 @@ function startScreenProcessing() {
                 isConfident = false;
             }
 
+            let toAddx = 0;
+            let toAddy = 0;
+            if (previousCorpRect) {
+                toAddx = previousCorpRect.x;
+                toAddy = previousCorpRect.y;
+            }
+
+            //just to prevent that one false positive influence the position (at least 2 are nedded)
+            if (!isConfident) {
+                wasLastLocationQuestionable = false;
+            } else if (!wasLastLocationQuestionable &&
+                //isConfident &&
+                locationPoint != null &&
+                distance(globalLocationPoint[0], globalLocationPoint[1], maxPoint.x + (templ.cols / 2) + toAddx, maxPoint.y + (templ.rows / 2) + toAddy) > questionableLocationDistance) {
+                wasLastLocationQuestionable = true;
+                isConfident = false;
+                //console.log("very fast movement detected");
+            } else if (//isConfident &&
+                wasLastLocationQuestionable) {
+                wasLastLocationQuestionable = true;
+            }
+
             var toDelete;
             var toDelete2;
             if (isDebuggingImageProcessing) {
@@ -105,23 +131,26 @@ function startScreenProcessing() {
             if (isConfident || locationPoint == null) {
                 locationPoint = new cv.Point(maxPoint.x + (templ.cols / 2), maxPoint.y + (templ.rows / 2));
 
-                let toAddx = 0;
-                let toAddy = 0;
-                if (previousCorpRect) {
-                    toAddx = previousCorpRect.x;
-                    toAddy = previousCorpRect.y;
-                }
-
                 globalLocationPoint = [locationPoint.x + toAddx, locationPoint.y + toAddy];
             }
             //let greyScaleMainClone = greyScaleMain.clone();
             //cv.rectangle(greyScaleMainClone, maxPoint, point, color, 2, cv.LINE_8, 0);
             if (isDebuggingImageProcessing) {
                 cv.rectangle(greyScaleToSearch, locationPoint, locationPoint, color, 2, cv.LINE_8, 0);
+                const greyScaleAllPlayers = greyScaleMain.clone();
+                for (const player of onlineUsers) {
+                    if(player.position[0] >= 0 && player.position[1] >= 0) {
+                        let playerLocation = new cv.Point(player.position[0], player.position[1]);
+                        cv.rectangle(greyScaleAllPlayers, playerLocation, playerLocation, color, 2, cv.LINE_8, 0);
+                    }
+                }
+
                 cv.imshow('canvasOutput', greyScaleTempl);
                 cv.imshow('canvasTestOutput', greyScaleToSearch);
                 cv.imshow('canvasTest2Output', dst);
+                cv.imshow('canvasCompleateBoard', greyScaleAllPlayers);
                 greyScaleToSearch.delete();
+                greyScaleAllPlayers.delete();
             }
 
             if (toDelete)
@@ -130,15 +159,8 @@ function startScreenProcessing() {
                 toDelete2.delete();
 
             if (isConfident) {
-                let relativeBeginX = 0;
-                let relativeBeginY = 0;
-                if (previousCorpRect) {
-                    relativeBeginX = previousCorpRect.x;
-                    relativeBeginY = previousCorpRect.y;
-                }
-
-                let px1 = Math.max(0, relativeBeginX + locationPoint.x - 1 * templ.cols);
-                let py1 = Math.max(0, relativeBeginY + locationPoint.y - 1 * templ.rows);
+                let px1 = Math.max(0, toAddx + locationPoint.x - 1 * templ.cols);
+                let py1 = Math.max(0, toAddy + locationPoint.y - 1 * templ.rows);
                 let px2 = Math.min(greyScaleMain.cols - px1, 2 * templ.cols);
                 let py2 = Math.min(greyScaleMain.rows - py1, 2 * templ.rows);
 
@@ -154,10 +176,8 @@ function startScreenProcessing() {
                     greyScaleToSearch = greyScaleMain.roi(previousCorpRect);
                 }
             } else {
-                if (previousCorpRect) {
-                    locationPoint.x += previousCorpRect.x;
-                    locationPoint.y += previousCorpRect.y;
-                }
+                locationPoint.x += toAddx;
+                locationPoint.y += toAddy;
                 if (isDebuggingImageProcessing) {
                     greyScaleToSearch = greyScaleMain.clone();
                 } else {
@@ -188,6 +208,12 @@ function startScreenProcessing() {
     }
     setTimeout(sendPosition, 0);
 
+}
+
+function distance(x1, y1, x2, y2) {
+    let a = x1 - x2;
+    let b = y1 - y2;
+    return Math.sqrt(a * a + b * b);
 }
 
 ////////////just debug functions///////////
