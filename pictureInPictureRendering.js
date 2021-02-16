@@ -60,15 +60,15 @@ function drawTalkingPlayers() {
                 ctx.fill();
 
                 ctx.beginPath();
-                ctx.strokeStyle = "black";
+                ctx.strokeStyle = "white";
                 let factor = 1;
-                if (onlineUsers[r * 5 + i].audioVolume > 0.01) {
+                if ((onlineUsers[r * 5 + i].audioVolume * onlineUsers[r * 5 + i].volume) > 0.01) {
                     factor = 5;
                     ctx.strokeStyle = 'DarkKhaki';
                 }
                 else
-                    ctx.strokeStyle = 'black';
-                ctx.lineWidth = factor + onlineUsers[r * 5 + i].audioVolume * 20;
+                    ctx.strokeStyle = 'white';
+                ctx.lineWidth = factor + onlineUsers[r * 5 + i].audioVolume * onlineUsers[r * 5 + i].volume * 20;
                 ctx.arc(mainLeftBorder + radius + i * (rightBorder + radius * 2), mainTopBorder + radius + r * (bottomBorder + radius * 2), 50, 0, Math.PI * 2, true);
                 ctx.stroke();
 

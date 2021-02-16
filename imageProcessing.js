@@ -1,6 +1,9 @@
 const smallFactor = 0.5;
 const videoNormalHeight = 124 * smallFactor;
-var globalLocationPoint = [-1, -1];
+var globalLocationPoint = [140, 221];
+
+var isDebuggingImageProcessing = false;
+var isRunning = true;
 
 async function startScreenCapture() {
     const mapImage = document.querySelector('#imageSrc');
@@ -21,8 +24,6 @@ async function startScreenCapture() {
     videoElement.srcObject = stream;
     setTimeout(startScreenProcessing, 1000);
 }
-
-
 
 
 function startScreenProcessing() {
@@ -57,6 +58,12 @@ function startScreenProcessing() {
     function processImage() {
         let begin = Date.now();
         var t0 = performance.now(); //performance
+        if (!isRunning) {
+            let delay = 1000 / FPS - (Date.now() - begin);
+            setTimeout(processImage, delay);
+            return;
+        }
+
         try {
             cap.read(templ); //gets the image
 
@@ -85,8 +92,14 @@ function startScreenProcessing() {
                 isConfident = false;
             }
 
-            cv.add(dst, new cv.Mat(dst.rows, dst.cols, cv.CV_32FC1, new cv.Scalar(-result.minVal)), dst);
-            cv.divide(dst, new cv.Mat(dst.rows, dst.cols, cv.CV_32FC1, new cv.Scalar(factor)), dst);
+            var toDelete;
+            var toDelete2;
+            if (isDebuggingImageProcessing) {
+                toDelete = new cv.Mat(dst.rows, dst.cols, cv.CV_32FC1, new cv.Scalar(-result.minVal));
+                cv.add(dst, toDelete, dst);
+                toDelete2 = new cv.Mat(dst.rows, dst.cols, cv.CV_32FC1, new cv.Scalar(factor));
+                cv.divide(dst, toDelete2, dst);
+            }
             //cv.devide();
             //let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
             if (isConfident || locationPoint == null) {
@@ -103,12 +116,18 @@ function startScreenProcessing() {
             }
             //let greyScaleMainClone = greyScaleMain.clone();
             //cv.rectangle(greyScaleMainClone, maxPoint, point, color, 2, cv.LINE_8, 0);
-            cv.rectangle(greyScaleToSearch, locationPoint, locationPoint, color, 2, cv.LINE_8, 0);
-            cv.imshow('canvasOutput', greyScaleTempl);
-            cv.imshow('canvasTestOutput', greyScaleToSearch);
-            cv.imshow('canvasTest2Output', dst);
+            if (isDebuggingImageProcessing) {
+                cv.rectangle(greyScaleToSearch, locationPoint, locationPoint, color, 2, cv.LINE_8, 0);
+                cv.imshow('canvasOutput', greyScaleTempl);
+                cv.imshow('canvasTestOutput', greyScaleToSearch);
+                cv.imshow('canvasTest2Output', dst);
+                greyScaleToSearch.delete();
+            }
 
-            //console.log(result.maxVal);
+            if (toDelete)
+                toDelete.delete();
+            if (toDelete2)
+                toDelete2.delete();
 
             if (isConfident) {
                 let relativeBeginX = 0;
@@ -128,15 +147,26 @@ function startScreenProcessing() {
                     py1,
                     px2,
                     py2);
-                greyScaleToSearch = greyScaleMain.roi(previousCorpRect).clone();
+
+                if (isDebuggingImageProcessing) {
+                    greyScaleToSearch = greyScaleMain.roi(previousCorpRect).clone();
+                } else {
+                    greyScaleToSearch = greyScaleMain.roi(previousCorpRect);
+                }
             } else {
                 if (previousCorpRect) {
                     locationPoint.x += previousCorpRect.x;
                     locationPoint.y += previousCorpRect.y;
                 }
-                greyScaleToSearch = greyScaleMain.clone();
+                if (isDebuggingImageProcessing) {
+                    greyScaleToSearch = greyScaleMain.clone();
+                } else {
+                    greyScaleToSearch = greyScaleMain;
+                }
                 previousCorpRect = null;
             }
+
+            //trap.delete();
         } catch (err) {
             console.log(err);
         }
@@ -160,18 +190,18 @@ function startScreenProcessing() {
 
 }
 
-/*
-function findXMaxLocs(dst, threshold) {
-    let ret = [];
-    for (let i = 0; i < dst.cols; i++) {
-        for (let j = 0; j < dst.rows; j++) {
-            const element = dst.data32F[i * dst.cols + j * dst.rows];
-            if (element > threshold) {
-                ret.push(element);
-                if (ret.length > 10)
-                    return ret;
-            }
-        }
-    }
-    return ret;
-}*/
+////////////just debug functions///////////
+function setPositionToInitial() {
+    globalLocationPoint = [290, 91];
+    sendMessageToAll("setPos", [290, 91]);
+}
+
+function startProcessing() {
+    isRunning = true;
+    sendMessageToAll("isRunning", true);
+}
+
+function stopProcessing() {
+    isRunning = false;
+    sendMessageToAll("isRunning", false);
+}

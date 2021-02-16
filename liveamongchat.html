@@ -173,6 +173,7 @@
         const urlParams = new URLSearchParams(queryString);
         var username = urlParams.get('username');
         var localColor = urlParams.get('color');
+        var isDebugging = urlParams.get('isDebugging');
 
         if (!username)
             username = "ruivop" + makeid(4);
@@ -210,6 +211,15 @@
                 case "p":
                     var usernameToPosition = getOnlineUserByUsername(peerUsername);
                     usernameToPosition.setPosition(RTCMessageEnvelope.m);
+                    break;
+                case "setPos":
+                    globalLocationPoint = RTCMessageEnvelope.m;
+                    break;
+                case "isRunning":
+                    isRunning = RTCMessageEnvelope.m;
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -320,6 +330,11 @@
                     sendMessage();
                 }
             });
+
+            if (isDebugging) {
+                isDebuggingImageProcessing = true;
+                document.getElementById("inputoutput").setAttribute("style", "");
+            }
         });
 
         function AddUser(otherUserName) {
@@ -368,11 +383,14 @@
 
 
 
-            <div style="display: none;" class="inputoutput">
+            <div id="inputoutput" style="display: none;">
                 <video id="localVideo" autoplay playsinline controls="false"></video>
                 <img style="display: none;" id="imageSrc" alt="No Image" src="assets/Skeld20b.jpg" />
                 <img style="display: none;" id="imageDeathScreen" alt="No Image"
                     src="assets/death-screen-corped-20.jpg" />
+                <button onclick="startProcessing()">Start Game</button>
+                <button onclick="stopProcessing()">Stop Game</button>
+                <button onclick="setPositionToInitial()">Initial Position</button>
                 <br>
                 <br>
                 <br>

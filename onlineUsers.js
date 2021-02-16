@@ -1,6 +1,12 @@
-const talkingDistance = 50;
-
 var onlineUsers = [];
+
+const talkingDistanceDropOfs = [
+    [50, 0],
+    [45, 0.1],
+    [40, 0.2],
+    [30, 0.4],
+    [0, 1]
+];
 
 function getOnlineUserByUsername(username) {
     return onlineUsers.filter(ou => ou.username == username)[0];
@@ -36,11 +42,11 @@ function createAllPeerConnections() {
 }
 
 class OnlineUser {
-    constructor(username, color, hasSound, hasVideo) {
-        this.username = username;
-        if (username.length < 3)
+    constructor(newUsername, color, hasSound, hasVideo) {
+        this.username = newUsername;
+        if (newUsername.length < 3)
             throw new Exception("name is to small");
-        this.initials = username.substring(0, 2);
+        this.initials = newUsername.substring(0, 2);
         this.color = color;
         this.hasVideo = hasVideo;
         this.hasSound = hasSound;
@@ -48,7 +54,7 @@ class OnlineUser {
         this.audioVolume = 0.0;
         this.audioMetter = null;
         this.position = [-1, -1];
-        this.volume = 0;
+        this.volume = 1;
     }
 
     createPeerConnection() {
@@ -78,22 +84,26 @@ class OnlineUser {
         var b = globalLocationPoint[1] - this.position[1];
 
         var distance = Math.sqrt(a * a + b * b);
-        let volumeToSet = 0;
-        if (distance > talkingDistance) {
-            volumeToSet = 0;
-        } else {
-            volumeToSet = 1;
-        }
+        let volumeToSet = getDropOfByDistance(distance);
+
         if (volumeToSet == this.volume) {
             return;
         }
-        if(!this.peerConnection)
+        if (!this.peerConnection)
             this.peerConnection = getPeerConnectionOfUsername(this.username);
 
-        console.log("volume set to " + volumeToSet);
-        console.log(this.peerConnection);
-        console.log(this.username);
+        console.log(this.username + " volume set to " + volumeToSet);
         this.volume = volumeToSet;
         this.peerConnection.setAudioLevel(volumeToSet);
     }
+}
+
+
+function getDropOfByDistance(distance) {
+    for (let i = 0; i < talkingDistanceDropOfs.length; i++) {
+        const talkingDistanceDrop = talkingDistanceDropOfs[i];
+        if (distance >= talkingDistanceDrop[0])
+            return talkingDistanceDrop[1];
+    }
+    return 1;
 }

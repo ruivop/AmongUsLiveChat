@@ -59,7 +59,7 @@ function startMyMedia() {
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             let audioElement = $('<p>Local:</p><audio id="localAudio" autoplay playsinline controls muted></audio>');
-            $(".GreenSendAudioChat").append(audioElement);
+            $("#inputoutput").append(audioElement);
             const videoElement = $('#localAudio')[0];
             videoElement.srcObject = stream;
             localStream = stream;
@@ -177,7 +177,7 @@ class LocalPeerConnection {
 
     gotRemoteStream(e) {
         this.audioElement = $('<div id="testAudioElement' + this.remoteUsername + '"><p>Remote ' + this.remoteUsername + ':</p><audio class="bordered" id="remoteAudio' + this.remoteUsername + '" autoplay controls playsinline></audio></div>');
-        $(".GreenSendAudioChat").append(this.audioElement);
+        $("#inputoutput").append(this.audioElement);
         this.audioElement = $("#remoteAudio" + this.remoteUsername)[0];
         if (this.audioElement.srcObject !== e.streams[0]) {
             this.audioElement.srcObject = e.streams[0];
