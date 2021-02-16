@@ -134,13 +134,12 @@ border: 1px solid white;
 /**** Chat ****/
 .GreenSendChat {
     min-width: 300px;
-    max-width: 500px;
+    max-width: 600px;
+    max-height: 350px;
 
     display: grid;
     grid-template-columns: auto;
     grid-template-rows: auto 50px;
-
-    overflow-y: auto;
 }
 
 #GreenSendChatMessages {

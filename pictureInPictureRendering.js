@@ -1,19 +1,35 @@
+var PIPVideo;
+
 function pictureInpicturePlayerTalking() {
-    const canvas = document.getElementById('audioCanvas');
-    const video = document.createElement('video');
-    video.id = "videoplayers";
-    video.muted = true;
-    video.controls = true;
-    video.srcObject = canvas.captureStream();
-    video.play();
-    drawTalkingPlayers();
-    video.onloadedmetadata = function () {
-        if (typeof video.requestPictureInPicture === 'function') {
-            video.requestPictureInPicture();
+    if (!PIPVideo) {
+        const canvas = document.getElementById('audioCanvas');
+        PIPVideo = document.createElement('video');
+        PIPVideo.id = "videoplayers";
+        PIPVideo.muted = true;
+        PIPVideo.controls = true;
+        PIPVideo.srcObject = canvas.captureStream();
+        PIPVideo.play();
+        drawTalkingPlayers();
+        PIPVideo.addEventListener('enterpictureinpicture', function(event) {
+            pictureInPictureButtonClick(true);
+          });
+          
+          PIPVideo.addEventListener('leavepictureinpicture', function(event) {
+            pictureInPictureButtonClick(false);
+          });          
+        PIPVideo.onloadedmetadata = function () {
+            if (typeof PIPVideo.requestPictureInPicture === 'function') {
+                PIPVideo.requestPictureInPicture();
+                return;
+            }
+            $(".GreenSendAudioChat")[0].appendChild(PIPVideo);
+            alert('Por favor clicar com o botão esquedo no video e depois em "Vídeo em janela flutuante"');
+        }
+    } else {
+        if (typeof PIPVideo.requestPictureInPicture === 'function') {
+            PIPVideo.requestPictureInPicture();
             return;
         }
-        document.body.appendChild(video);
-        alert('Por favor clicar com o botão esquedo no video e depois em "Vídeo em janela flutuante"');
     }
 };
 

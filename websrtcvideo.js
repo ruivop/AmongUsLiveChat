@@ -67,6 +67,8 @@ function startMyMedia() {
             startMesuringAudio(username, stream);
 
             didShareTheMic();
+            
+            pictureInpicturePlayerTalking();
 
             OpenWebSocket();
         })

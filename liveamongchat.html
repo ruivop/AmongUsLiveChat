@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
     <link href="fontawesome-free-5.15.1-web/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="packages/bootstrap-4.3.1-dist/css/bootstrap.min.css">
+    
     <link rel="stylesheet" href="style.css">
 
     <script src="js/jquery-3.5.1.min.js"></script>
@@ -159,7 +160,7 @@
             else
                 $(".messanger").append('<div class="OtherUserChatMessageLine"><span class="UserDot">' + username.substring(0, 1).toUpperCase() + '</span><div class="AllUserChatMessage OtherUserChatMessage"><p>' + content + '</p></div></div>');
 
-            $(".messanger div:last-child").last()[0].scrollIntoView({ block: 'end', behavior: 'smooth' });
+            $(".messanger div:last-child").last()[0].scrollIntoView({ block: 'nearest',inline: "nearest", behavior: 'smooth' });
         }
 
         function makeid(length) {
@@ -210,7 +211,6 @@
                 $("#microShareBtn").hide();
                 $("#microShareCheck").show();
             } catch (e) { }
-
         }
 
         function didShareTheScreen() {
@@ -218,6 +218,12 @@
                 $("#screenShareBtn").prop('disabled', true);
                 $("#screenShareBtn").hide();
                 $("#screenShareCheck").show();
+            } catch (e) { }
+        }
+
+        function pictureInPictureButtonClick(isVisible) {
+            try {
+                $(".pictureInPictureButton").prop('disabled', isVisible);
             } catch (e) { }
         }
     </script>
