@@ -18,6 +18,7 @@
     <script src="audioProcessing.js"></script>
     <script src="pictureInPictureRendering.js"></script>
     <script src="imageProcessing.js"></script>
+    <script src="screenState.js"></script>
     <title>Live Among Us</title>
 
 </head>
@@ -287,7 +288,7 @@
             <button onclick="setPositionToInitial()">Initial Position</button>
             <br>
             <video id="localVideo" autoplay playsinline controls="false"></video>
-            <br>
+            <p>Image Processing took <span id="imageProcessingTime">-1</span> ms</p>
             <canvas class="testCanvas" id="canvasOutput"></canvas>
             <canvas class="testCanvas" id="canvasTestOutput"></canvas>
             <canvas class="testCanvas" id="canvasTest2Output"></canvas>

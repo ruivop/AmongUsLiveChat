@@ -55,6 +55,7 @@ class OnlineUser {
         this.audioMetter = null;
         this.position = [-1, -1];
         this.volume = 1;
+        this.isDead = false;
     }
 
     createPeerConnection() {
@@ -77,8 +78,24 @@ class OnlineUser {
         this.audioMetter.stop();
     }
 
+    setIsDead(isDead) {
+        this.isDead = isDead;
+        setPosition(this.position);
+    }
+
     setPosition(newPosition) {
         this.position = newPosition;
+
+        if (!this.peerConnection)
+            this.peerConnection = getPeerConnectionOfUsername(this.username);
+
+        if(this.isDead) {
+            if (this.volume != 0) {
+                this.volume = 0;
+                this.peerConnection.setAudioLevel(0);
+            }
+            return;
+        }
 
         var a = globalLocationPoint[0] - this.position[0];
         var b = globalLocationPoint[1] - this.position[1];
@@ -89,8 +106,6 @@ class OnlineUser {
         if (volumeToSet == this.volume) {
             return;
         }
-        if (!this.peerConnection)
-            this.peerConnection = getPeerConnectionOfUsername(this.username);
 
         console.log(this.username + " volume set to " + volumeToSet);
         this.volume = volumeToSet;
