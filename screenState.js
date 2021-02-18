@@ -24,12 +24,14 @@ function setScreenState(newState) {
         //if it has a short death screen and it is followed by the normal game, then this user is dead
         //if it has a short death screen and it is followed by the voting screen, then this user did not died
         if (!deadScreeenTimeBloc1) {
+            //console.log("deathTime1 started");
             deadScreeenTimeBloc1 = {
                 startTime: Date.now(),
                 endTime: null,
                 totalTime: null
             };
-        } else if(deadScreeenTimeBloc1.endTime) {
+        } else if(deadScreeenTimeBloc1.endTime && !deadScreeenTimeBloc2) {
+            //console.log("deathTime2 started");
             liveScreenTimeBloc.endTime = Date.now();
             liveScreenTimeBloc.totalTime = liveScreenTimeBloc.endTime - liveScreenTimeBloc.startTime; //shold be around 1400
 
@@ -41,6 +43,7 @@ function setScreenState(newState) {
         }
 
     } else if (deadScreeenTimeBloc1 && !deadScreeenTimeBloc1.endTime) {
+        //console.log("deathTime1 ended");
         deadScreeenTimeBloc1.endTime = Date.now();
         deadScreeenTimeBloc1.totalTime = deadScreeenTimeBloc1.endTime - deadScreeenTimeBloc1.startTime; //shold be around 2000
 
@@ -55,6 +58,7 @@ function setScreenState(newState) {
             didDie();
         }
     } else if(deadScreeenTimeBloc2 && !deadScreeenTimeBloc2.endTime) {
+        //console.log("deathTime2 ended");
         console.log("DIED from being 2 times with the death screen");
         didDie();
     } else if(deadScreeenTimeBloc1 && deadScreeenTimeBloc1.endTime) {

@@ -9,11 +9,15 @@ async function startScreenCapture() {
 
     const mapImage = document.querySelector('#imageSrc');
     const deathSreenImage = document.querySelector('#imageDeathScreen');
+    const imageVotingScreen = document.querySelector('#imageVotingScreen');
     mapImage.height *= smallFactor;
     mapImage.width *= smallFactor;
     let deathImageWidthFactor = deathSreenImage.height / videoNormalHeight;
     deathSreenImage.height = videoNormalHeight;
     deathSreenImage.width = deathSreenImage.width / deathImageWidthFactor;
+    let votingImageWidthFactor = imageVotingScreen.height / videoNormalHeight;
+    imageVotingScreen.height = videoNormalHeight;
+    imageVotingScreen.width = imageVotingScreen.width / votingImageWidthFactor;
 
     const constraints = {
         video: {
@@ -71,7 +75,7 @@ function startScreenProcessing() {
             return;
         }
 
-        //try {
+        try {
             cap.read(templ); //gets the image
 
             //processing of the video image
@@ -80,7 +84,10 @@ function startScreenProcessing() {
             cv.GaussianBlur(trap, trap, new cv.Size(radius, radius), 0, 0); //blurs it
             cv.addWeighted(greyScaleTempl, blend, trap, 1 - blend, 0.0, greyScaleTempl); // adds it
 
-            if (getHasDeathScreen()) {
+            if (getHasVotingScreen()) {
+                setScreenState("votingScreen");
+            }
+            else if (getHasDeathScreen()) {
                 setScreenState("deathScreen");
             }
             else {
@@ -152,7 +159,7 @@ function startScreenProcessing() {
                     cv.imshow('canvasOutput', greyScaleTempl);
                     cv.imshow('canvasTestOutput', greyScaleToSearch);
                     cv.imshow('canvasTest2Output', dst);
-                    cv.imshow('canvasCompleateBoard', greyScaleDeathSrc);
+                    cv.imshow('canvasCompleateBoard', greyScaleVotingSrc);
                     greyScaleToSearch.delete();
                     //greyScaleAllPlayers.delete();
                 }
@@ -200,9 +207,9 @@ function startScreenProcessing() {
                     previousCorpRect = null;
                 }
             }
-        /*} catch (err) {
+        } catch (err) {
             console.log(err);
-        }*/
+        }
         if (isDebuggingImageProcessing) {
             $("#imageProcessingTime").text((performance.now() - t0).toFixed(0));
         }
@@ -238,6 +245,37 @@ function startScreenProcessing() {
             return true;
         else
             return false;
+    }
+
+
+    //////////////////////////////
+    //////////////////////////////
+    //Voting Screen
+    //////////////////////////////
+    //////////////////////////////
+    let votingSrc = cv.imread('imageVotingScreen');
+    let greyScaleVotingSrc = new cv.Mat();
+    cv.cvtColor(votingSrc, greyScaleVotingSrc, cv.COLOR_RGBA2GRAY, 0);
+    let trap4 = new cv.Mat();
+    cv.bitwise_not(greyScaleVotingSrc, trap4);
+    cv.GaussianBlur(trap4, trap4, new cv.Size(radius, radius), 0, 0);
+    cv.addWeighted(greyScaleVotingSrc, blend, trap4, 1 - blend, 0.0, greyScaleVotingSrc);
+    trap4.delete();
+    votingSrc.delete();
+    let votinghDst = new cv.Mat();
+    let corpVotingRect = new cv.Rect((videoElement.width - greyScaleVotingSrc.cols) / 2, 0, greyScaleVotingSrc.cols, greyScaleVotingSrc.rows);
+    function getHasVotingScreen() {
+        let corpedRoiScreen = greyScaleTempl.roi(corpVotingRect);
+        cv.matchTemplate(greyScaleVotingSrc, corpedRoiScreen, votinghDst, cv.TM_CCOEFF_NORMED);
+        corpedRoiScreen.delete();
+        let result = cv.minMaxLoc(votinghDst);
+        if (result.maxVal == 1) //sometimes this happens... Don't know why
+            return false;
+        if (result.maxVal > 0.12) {
+            //console.log("did screen vote: " + result.maxVal);
+            return true;
+        }
+        return false;
     }
 
     //////////////////////////////
