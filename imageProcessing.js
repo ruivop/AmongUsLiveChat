@@ -159,7 +159,7 @@ function startScreenProcessing() {
                     cv.imshow('canvasOutput', greyScaleTempl);
                     cv.imshow('canvasTestOutput', greyScaleToSearch);
                     cv.imshow('canvasTest2Output', dst);
-                    cv.imshow('canvasCompleateBoard', greyScaleVotingSrc);
+                    //cv.imshow('canvasCompleateBoard', greyScaleAllPlayers);
                     greyScaleToSearch.delete();
                     //greyScaleAllPlayers.delete();
                 }
@@ -294,7 +294,6 @@ function startScreenProcessing() {
         setTimeout(sendPosition, delay);
     }
     setTimeout(sendPosition, 0);
-
 }
 
 function distance(x1, y1, x2, y2) {

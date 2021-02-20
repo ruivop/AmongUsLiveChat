@@ -8,16 +8,14 @@ const possibleGameStates = [
     "deadScreen",
     "votingScreen",
 ];
+var isLocalPlayerDead = false;
 
 var deadScreeenTimeBloc1 = null;
 var deadScreeenTimeBloc2 = null;
 var liveScreenTimeBloc = null;
 
 function setScreenState(newState) {
-    //todo send to all others if its a new state
     if (newState == "deathScreen") {
-        localGameState = newState;
-
         //record the begining time of the deth screen
         //record the end time of the deth screen
         //if it has a very long death screen or 2 screen in a short time, this player is dead
@@ -30,7 +28,7 @@ function setScreenState(newState) {
                 endTime: null,
                 totalTime: null
             };
-        } else if(deadScreeenTimeBloc1.endTime && !deadScreeenTimeBloc2) {
+        } else if (deadScreeenTimeBloc1.endTime && !deadScreeenTimeBloc2) {
             //console.log("deathTime2 started");
             liveScreenTimeBloc.endTime = Date.now();
             liveScreenTimeBloc.totalTime = liveScreenTimeBloc.endTime - liveScreenTimeBloc.startTime; //shold be around 1400
@@ -52,32 +50,38 @@ function setScreenState(newState) {
             endTime: null,
             totalTime: null
         };
-        
-        if(deadScreeenTimeBloc1.totalTime > 3500) {
-            console.log("DIED from being a lot of time in the death screen");
-            didDie();
+
+        if (deadScreeenTimeBloc1.totalTime > 3500) {
+            didDie("DIED from being a lot of time in the death screen");
         }
-    } else if(deadScreeenTimeBloc2 && !deadScreeenTimeBloc2.endTime) {
+    } else if (deadScreeenTimeBloc2 && !deadScreeenTimeBloc2.endTime) {
         //console.log("deathTime2 ended");
-        console.log("DIED from being 2 times with the death screen");
-        didDie();
-    } else if(deadScreeenTimeBloc1 && deadScreeenTimeBloc1.endTime) {
-        if(newState != "votingScreen") {
+        didDie("DIED from being 2 times with the death screen");
+    } else if (deadScreeenTimeBloc1 && deadScreeenTimeBloc1.endTime) {
+        if (newState != "votingScreen") {
             var liveScreenTime = Date.now() - liveScreenTimeBloc.startTime;
-            if(liveScreenTime > 2000) { //since the total time to show the second death screen or the voting screen is around 1500, this should be enough
-                console.log("DIED the normal way");
-                didDie();
+            if (liveScreenTime > 2000) { //since the total time to show the second death screen or the voting screen is around 1500, this should be enough
+                didDie("DIED the normal way");
             }
         } else {
             cleanDeadRelatedTimeBlocs();
         }
     }
+
+    if (newState == "votingScreen" && (globalLocationPoint[0] != 289 || globalLocationPoint[1] != 95)) {
+        globalLocationPoint = [289, 95];
+    }
+
+    if (localGameState != newState)
+        sendMessageToAll("screenState", newState);
+    localGameState = newState;
 }
 
-function didDie() {
+function didDie(reason) {
     cleanDeadRelatedTimeBlocs();
-    //set that this players is dead
-    //send this info to all other players
+    console.log(reason);
+    sendMessageToAll("didDie", reason);
+    isLocalPlayerDead = true;
 }
 
 function cleanDeadRelatedTimeBlocs() {

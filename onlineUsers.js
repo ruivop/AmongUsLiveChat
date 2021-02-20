@@ -41,6 +41,16 @@ function createAllPeerConnections() {
         });
 }
 
+function userDidDie(username) {
+    const foundUser = onlineUsers.filter(ou => ou.username == username)[0];
+    foundUser.setIsDead(true);
+}
+
+function setUserSreenState(username, state) {
+    const foundUser = onlineUsers.filter(ou => ou.username == username)[0];
+    foundUser.setScreenState(state);
+}
+
 class OnlineUser {
     constructor(newUsername, color, hasSound, hasVideo) {
         this.username = newUsername;
@@ -56,6 +66,9 @@ class OnlineUser {
         this.position = [-1, -1];
         this.volume = 1;
         this.isDead = false;
+        this.deathReason = null;
+        this.sreenState = null;
+        this.forceMute = false;
     }
 
     createPeerConnection() {
@@ -78,18 +91,32 @@ class OnlineUser {
         this.audioMetter.stop();
     }
 
-    setIsDead(isDead) {
+    setScreenState(newScreenState) {
+        this.sreenState = newScreenState;
+        if(newScreenState == "deathScreen") {
+            this.forceMute = true;
+            console.log("forced mute");
+        }else {
+            this.forceMute = false;
+        }
+    }
+
+    setIsDead(isDead, deathReason) {
         this.isDead = isDead;
-        setPosition(this.position);
+        this.setPosition(this.position);
+        this.deathReason = deathReason;
+        //console.log("the user " + this.username + " is dead");
     }
 
     setPosition(newPosition) {
         this.position = newPosition;
 
-        if (!this.peerConnection)
+        if (!this.peerConnection) {
             this.peerConnection = getPeerConnectionOfUsername(this.username);
+        }
 
-        if(this.isDead) {
+
+        if (this.forceMute || (this.isDead && !isLocalPlayerDead)) {
             if (this.volume != 0) {
                 this.volume = 0;
                 this.peerConnection.setAudioLevel(0);
@@ -107,7 +134,7 @@ class OnlineUser {
             return;
         }
 
-        console.log(this.username + " volume set to " + volumeToSet);
+        //console.log(this.username + " volume set to " + volumeToSet);
         this.volume = volumeToSet;
         this.peerConnection.setAudioLevel(volumeToSet);
     }
@@ -121,4 +148,15 @@ function getDropOfByDistance(distance) {
             return talkingDistanceDrop[1];
     }
     return 1;
+}
+
+function reviveAllPlayers(sendToAll) {
+    if (sendToAll)
+        sendMessageToAll("reviveAll", true);
+    isLocalPlayerDead = false;
+    for (const player of onlineUsers) {
+        if (player.username == username)
+            continue;
+        player.setIsDead(false, null);
+    }
 }
