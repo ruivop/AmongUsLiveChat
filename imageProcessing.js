@@ -5,6 +5,9 @@ var globalLocationPoint = [140, 221];
 var isDebuggingImageProcessing = false;
 var isRunning = true;
 
+var shouldCheckForVotingScreen = false;
+var shouldCheckForDeathScreen = true;
+
 async function startScreenCapture() {
 
     const mapImage = document.querySelector('#imageSrc');
@@ -75,7 +78,7 @@ function startScreenProcessing() {
             return;
         }
 
-        try {
+        //try {
             cap.read(templ); //gets the image
 
             //processing of the video image
@@ -84,13 +87,22 @@ function startScreenProcessing() {
             cv.GaussianBlur(trap, trap, new cv.Size(radius, radius), 0, 0); //blurs it
             cv.addWeighted(greyScaleTempl, blend, trap, 1 - blend, 0.0, greyScaleTempl); // adds it
 
-            if (getHasVotingScreen()) {
+            if (shouldCheckForVotingScreen && getHasVotingScreen()) {
                 setScreenState("votingScreen");
+                if (previousCorpRect) {
+                    greyScaleToSearch.delete();
+                    previousCorpRect = null;
+                    greyScaleToSearch = null;
+                }
+                //getKillByVotingScreen();
             }
-            else if (getHasDeathScreen()) {
+            else if (shouldCheckForDeathScreen && getHasDeathScreen()) {
                 setScreenState("deathScreen");
             }
             else {
+                if(!greyScaleToSearch)
+                    greyScaleToSearch = greyScaleMain.clone();
+                
                 //matches template
                 cv.matchTemplate(greyScaleToSearch, greyScaleTempl, dst, cv.TM_CCOEFF_NORMED);
 
@@ -148,20 +160,20 @@ function startScreenProcessing() {
                 if (isDebuggingImageProcessing) {
                     if (locationPoint)
                         cv.rectangle(greyScaleToSearch, locationPoint, locationPoint, color, 2, cv.LINE_8, 0);
-                    /*const greyScaleAllPlayers = greyScaleMain.clone();
+                    const greyScaleAllPlayers = greyScaleMain.clone();
                     for (const player of onlineUsers) {
-                        if(player.position[0] >= 0 && player.position[1] >= 0) {
+                        if (player.position[0] >= 0 && player.position[1] >= 0) {
                             let playerLocation = new cv.Point(player.position[0], player.position[1]);
                             cv.rectangle(greyScaleAllPlayers, playerLocation, playerLocation, color, 2, cv.LINE_8, 0);
                         }
-                    }*/
+                    }
 
                     cv.imshow('canvasOutput', greyScaleTempl);
                     cv.imshow('canvasTestOutput', greyScaleToSearch);
                     cv.imshow('canvasTest2Output', dst);
-                    //cv.imshow('canvasCompleateBoard', greyScaleAllPlayers);
+                    cv.imshow('canvasCompleateBoard', greyScaleAllPlayers);
                     greyScaleToSearch.delete();
-                    //greyScaleAllPlayers.delete();
+                    greyScaleAllPlayers.delete();
                 }
 
                 if (toDelete)
@@ -207,9 +219,9 @@ function startScreenProcessing() {
                     previousCorpRect = null;
                 }
             }
-        } catch (err) {
+        /*} catch (err) {
             console.log(err);
-        }
+        }*/
         if (isDebuggingImageProcessing) {
             $("#imageProcessingTime").text((performance.now() - t0).toFixed(0));
         }
@@ -271,8 +283,8 @@ function startScreenProcessing() {
         let result = cv.minMaxLoc(votinghDst);
         if (result.maxVal == 1) //sometimes this happens... Don't know why
             return false;
-        if (result.maxVal > 0.12) {
-            //console.log("did screen vote: " + result.maxVal);
+        if (result.maxVal > 0.15) {
+            console.log("did screen vote: " + result.maxVal);
             return true;
         }
         return false;

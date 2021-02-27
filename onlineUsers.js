@@ -93,10 +93,10 @@ class OnlineUser {
 
     setScreenState(newScreenState) {
         this.sreenState = newScreenState;
-        if(newScreenState == "deathScreen") {
+        if (!this.isDead && newScreenState == "deathScreen") {
             this.forceMute = true;
             console.log("forced mute");
-        }else {
+        } else {
             this.forceMute = false;
         }
     }
