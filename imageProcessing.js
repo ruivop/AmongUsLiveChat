@@ -1,12 +1,14 @@
 const smallFactor = 0.5;
 const videoNormalHeight = 124 * smallFactor;
+const videoTextAnalysisHeight = 500;
 var globalLocationPoint = [140, 221];
 
 var isDebuggingImageProcessing = false;
 var isRunning = true;
 
-var shouldCheckForVotingScreen = false;
+var shouldCheckForVotingScreen = true;//todo:Change to false
 var shouldCheckForDeathScreen = true;
+var isRecordingKillByVotingScreen = false;
 
 async function startScreenCapture() {
 
@@ -78,7 +80,16 @@ function startScreenProcessing() {
             return;
         }
 
-        //try {
+        try {
+            if (isRecordingKillByVotingScreen) {
+                recordKillByVotingScreen();
+
+                //let delay = 1000 / FPS - (Date.now() - begin);
+                //setTimeout(processImage, delay);
+                return;
+            }
+
+
             cap.read(templ); //gets the image
 
             //processing of the video image
@@ -94,15 +105,15 @@ function startScreenProcessing() {
                     previousCorpRect = null;
                     greyScaleToSearch = null;
                 }
-                //getKillByVotingScreen();
+                getKillByVotingScreen();
             }
             else if (shouldCheckForDeathScreen && getHasDeathScreen()) {
                 setScreenState("deathScreen");
             }
             else {
-                if(!greyScaleToSearch)
+                if (!greyScaleToSearch)
                     greyScaleToSearch = greyScaleMain.clone();
-                
+
                 //matches template
                 cv.matchTemplate(greyScaleToSearch, greyScaleTempl, dst, cv.TM_CCOEFF_NORMED);
 
@@ -219,9 +230,9 @@ function startScreenProcessing() {
                     previousCorpRect = null;
                 }
             }
-        /*} catch (err) {
+        } catch (err) {
             console.log(err);
-        }*/
+        }
         if (isDebuggingImageProcessing) {
             $("#imageProcessingTime").text((performance.now() - t0).toFixed(0));
         }
@@ -288,6 +299,163 @@ function startScreenProcessing() {
             return true;
         }
         return false;
+    }
+
+
+    //////////////////////////////
+    //////////////////////////////
+    // Kill by Voting Screen
+    //////////////////////////////
+    //////////////////////////////
+    //i have to increase the video, make a copy and resize it back to small. When rhe voting ends this screen will be analyzed to check how was killed.
+    let bigScreenWidth = (videoElement.videoWidth * videoTextAnalysisHeight) / videoElement.videoHeight;
+    let killByVotingScreen = new cv.Mat(videoTextAnalysisHeight, bigScreenWidth, cv.CV_8UC4);
+    let capBig;
+    let lastRecordedKillByVotingScreen = null;
+    let killByVotingScreenGreyScale = new cv.Mat();
+    let trap5 = new cv.Mat();
+    let voteImage = cv.imread('imageVote');
+    let greyScaleVoteImage = new cv.Mat();
+    cv.cvtColor(voteImage, greyScaleVoteImage, cv.COLOR_RGBA2GRAY, 0);
+    let trap6 = new cv.Mat();
+    cv.bitwise_not(greyScaleVoteImage, trap6);
+    cv.GaussianBlur(trap6, trap6, new cv.Size(radius, radius), 0, 0);
+    cv.addWeighted(greyScaleVoteImage, blend, trap6, 1 - blend, 0.0, greyScaleVoteImage);
+    trap6.delete();
+    voteImage.delete();
+    let voteDst = new cv.Mat();
+    function getKillByVotingScreen() {
+        if (lastRecordedKillByVotingScreen && Date.now() - lastRecordedKillByVotingScreen < 1000) { // only does this every second
+            return;
+        }
+
+        isRecordingKillByVotingScreen = true;
+
+        videoElement.height = videoTextAnalysisHeight;
+        videoElement.width = bigScreenWidth;
+    }
+
+    function recordKillByVotingScreen() {
+        isRecordingKillByVotingScreen = false;
+        if (!capBig)
+            capBig = new cv.VideoCapture(videoElement);
+        capBig.read(killByVotingScreen); //gets the image
+
+        lastRecordedKillByVotingScreen = Date.now();
+        verifyKillByVotingScreen();
+
+        //videoElement.height = videoNormalHeight;
+        //videoElement.width = (videoElement.videoWidth * videoNormalHeight) / videoElement.videoHeight;
+    }
+
+
+    const voteWidth = 25;
+    const voteHeight = 20;
+    function verifyKillByVotingScreen() {
+        let t0 = performance.now();
+        cv.cvtColor(killByVotingScreen, killByVotingScreenGreyScale, cv.COLOR_RGBA2GRAY, 0);
+
+        cv.bitwise_not(killByVotingScreenGreyScale, trap5);
+        cv.GaussianBlur(trap5, trap5, new cv.Size(radius, radius), 0, 0);
+        cv.addWeighted(killByVotingScreenGreyScale, blend, trap5, 1 - blend, 0.0, killByVotingScreenGreyScale);
+
+        //player disposition:
+        // 0 5
+        // 1 6
+        // 2 7
+        // 3 8
+        // 4 9
+        //skipped
+        var votes = [
+            0,//0
+            0,//1
+            0,//2
+            0,//3
+            0,//4
+            0,//5
+            0,//6
+            0,//7
+            0,//8
+            0,//9
+            0,//skipped
+        ];
+
+        let RedColor = new cv.Scalar(255, 0, 0, 255);
+
+        let initialX = 183;
+        let initialY = 125;
+        const rowHeight = 63.5;
+        const columnWidth = 304;
+        for (let column = 0; column < 2; column++) {
+            let initialXPlayer = initialX + column * columnWidth;
+            for (let row = 0; row < 5; row++) {
+                let initialYPlayer = initialY + row * rowHeight;
+                for (let i = 1; i < 7; i++) {
+                    //let voteStartLocation = new cv.Point(initialXPlayer + voteWidth * (i - 1), initialYPlayer);
+                    //let voteEndLocation = new cv.Point(initialXPlayer + voteWidth * i, initialYPlayer + voteHeight);
+                    let corpPlayerVote = new cv.Rect(
+                        initialXPlayer + voteWidth * (i - 1),
+                        initialYPlayer,
+                        voteWidth,
+                        voteHeight);
+                    let playerVoteImage = killByVotingScreenGreyScale.roi(corpPlayerVote);
+
+                    cv.matchTemplate(greyScaleVoteImage, playerVoteImage, voteDst, cv.TM_CCOEFF_NORMED);
+                    playerVoteImage.delete();
+                    //cv.rectangle(killByVotingScreenGreyScale, voteStartLocation, voteEndLocation, RedColor, 1, cv.LINE_8, 0);
+                    console.log("(" + column + ", " + row + ", " + i + ") = " + voteDst.data32F[0]);
+
+                    if (voteDst.data32F[0] > 0.4 && voteDst.data32F[0] != 1) {
+                        votes[column * 5 + row] += 1;
+                        //console.log("(" + column + ", " + row + ", " + i + ") = " + voteDst.data32F[0]);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        console.log("kill by voting performance: " + (performance.now() - t0));
+
+        let skippedInitialX = 191;
+        let skippedinitialY = 432;
+        for (let i = 1; i < 10; i++) {
+            //let voteStartLocation = new cv.Point(skippedInitialX + voteWidth * (i - 1), skippedinitialY);
+            //let voteEndLocation = new cv.Point(skippedInitialX + voteWidth * i, skippedinitialY + voteHeight);
+
+            let corpPlayerVote = new cv.Rect(
+                skippedInitialX + voteWidth * (i - 1),
+                skippedinitialY,
+                voteWidth,
+                voteHeight);
+            let playerVoteImage = killByVotingScreenGreyScale.roi(corpPlayerVote);
+            cv.matchTemplate(greyScaleVoteImage, playerVoteImage, voteDst, cv.TM_CCOEFF_NORMED);
+            playerVoteImage.delete();
+            console.log("(skipped, " + i + ") = " + voteDst.data32F[0]);
+            //cv.rectangle(killByVotingScreenGreyScale, voteStartLocation, voteEndLocation, RedColor, 1, cv.LINE_8, 0);
+            if (voteDst.data32F[0] > 0.4 && voteDst.data32F[0] != 1) {
+                votes[10] += 1;
+            } else {
+                break;
+            }
+            //cv.rectangle(killByVotingScreenGreyScale, voteStartLocation, voteEndLocation, RedColor, 1, cv.LINE_8, 0);
+        }
+
+        var biggestIndex = 0;
+        var isTied = false;
+        for (let i = 1; i < votes.length; i++) {
+            const numerOfVotes = votes[i];
+            if (numerOfVotes > votes[biggestIndex]) {
+                biggestIndex = i;
+                isTied = false
+            } else if (numerOfVotes == votes[biggestIndex]) {
+                isTied = true;
+            }
+        }
+        console.log(votes);
+        console.log("Is tied? " + isTied);
+        console.log("The most voted has " + votes[biggestIndex] + " votes in index " + biggestIndex);
+
+        //cv.imshow('canvasCompleateBoard', killByVotingScreenGreyScale);
     }
 
     //////////////////////////////
