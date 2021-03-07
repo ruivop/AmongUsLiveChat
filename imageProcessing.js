@@ -455,7 +455,51 @@ function startScreenProcessing() {
         console.log("Is tied? " + isTied);
         console.log("The most voted has " + votes[biggestIndex] + " votes in index " + biggestIndex);
 
-        //cv.imshow('canvasCompleateBoard', killByVotingScreenGreyScale);
+
+        if (isTied || biggestIndex == 10) {
+            return null;
+        }
+
+        const nameInitialX = 183;
+        const nameInitialY = 100;
+        const playerNameWidth = 160;
+        const playerNameHeight = 28;
+        /*for (let column = 0; column < 2; column++) {
+            let initialXPlayer = nameInitialX + column * columnWidth;
+            for (let row = 0; row < 5; row++) {
+                let initialYPlayer = nameInitialY + row * rowHeight;
+                let voteStartLocation = new cv.Point(initialXPlayer, initialYPlayer);
+                let voteEndLocation = new cv.Point(initialXPlayer + playerNameWidth, initialYPlayer + playerNameHeight);
+                cv.rectangle(killByVotingScreenGreyScale, voteStartLocation, voteEndLocation, RedColor, 1, cv.LINE_8, 0);
+            }
+        }*/
+        let nameColumn = Math.floor(biggestIndex / 5);
+        let nameRow = biggestIndex % 5;
+        let corpPlayerName = new cv.Rect(
+            nameInitialX + nameColumn * columnWidth,
+            nameInitialY + nameRow * rowHeight,
+            playerNameWidth,
+            playerNameHeight);
+        let playerNameMat = killByVotingScreenGreyScale.roi(corpPlayerName);
+
+        cv.threshold(playerNameMat, playerNameMat, 120, 255, cv.THRESH_BINARY);
+        /*
+                let structuringElm = cv.Mat.ones(5, 5, cv.CV_8U);
+                cv.dilate(playerNameMat, playerNameMat, structuringElm);
+        */
+
+        cv.imshow('canvasCompleateBoard', playerNameMat);
+
+        const playerNameCanvas = document.querySelector('#canvasCompleateBoard');
+
+        Tesseract.recognize(playerNameCanvas, 'eng').then((data) => {
+            console.log(data);
+        })
+            .catch((e) => {
+                console.log("erro: " + e);
+            });
+
+        playerNameMat.delete();
     }
 
     //////////////////////////////
